@@ -127,8 +127,8 @@ flowchart TD
 | **Aba Perfil** | Dados da Conta & Logout | ✅ **100% Concluída** | `lib/features/profile/presentation/screens/profile_screen.dart` |
 | **Tela 02** | Home / Dashboard com Cards | ✅ **100% Concluída** | `lib/features/home/presentation/screens/home_screen.dart` |
 | **Tela 03** | Listagem de Processos | ✅ **100% Concluída** | `lib/features/processos/presentation/screens/processos_list_screen.dart` |
-| **Módulo OCR** | Adicionar Processo via IA | ⏳ *Próxima etapa* | `lib/features/ocr/services/gemini_ocr_service.dart` |
-| **Tela 04** | Detalhes do Processo (Timeline) | ⏳ *Pendente* | `lib/features/processos/presentation/screens/processo_detalhes_screen.dart` |
+| **Módulo OCR** | Adicionar Processo via IA | ✅ **100% Concluído** | `lib/features/ocr/presentation/screens/novo_processo_ocr_screen.dart` |
+| **Tela 04** | Detalhes do Processo (Timeline) | ⏳ *Próxima etapa* | `lib/features/processos/presentation/screens/processo_detalhes_screen.dart` |
 | **Tela 05** | Pendências & Envio de Documentos | ⏳ *Pendente* | `lib/features/pendencias/presentation/screens/pendencias_screen.dart` |
 
 ---
@@ -152,17 +152,33 @@ flowchart TD
   - Dropdown por Status (`Em andamento`, `Em análise`, `Com pendência`, `Licença emitida`, `Arquivado`).
   - Botão interativo para "Limpar filtros" quando ativos.
 - **Contador Dinâmico:** Exibe `X processos cadastrados`.
-- **Botão "+ Adicionar processo":** Abre modal bottom-sheet completo para cadastrar novos processos diretamente no Supabase.
+- **Botão "+ Adicionar processo":** Navega para a tela de OCR inteligente (`NovoProcessoOcrScreen`).
 - **Card Padronizado (`ProcessoCard`):** Exibe empreendimento, protocolo, órgão, tipo de licença e badge com status.
 
 ---
 
-## 6. Próximos Passos de Desenvolvimento
+## 6. Implementação do Módulo OCR com Google Gemini (Item 5 do Passo a Passo)
 
-1. **Item 5 do Passo a Passo — OCR com Gemini ("Adicionar Processo com IA")**:
-   - Integrar upload de PDF/imagem via `file_picker` / `image_picker`.
-   - Envio para a API multimodal do Google Gemini (`gemini-2.5-flash`).
-   - Extração automática de protocolo, empreendimento, órgão e pendências.
-   - Pré-preenchimento do formulário de cadastro para validação do usuário antes de persistir no Supabase + Storage.
-2. **Item 6 do Passo a Passo — Telas 04 e 05 (Detalhes e Pendências)**:
-   - Linha do tempo de movimentações e envio de documentos para sanar pendências.
+- **Serviço Multimodal (`lib/features/ocr/services/gemini_ocr_service.dart`):**
+  - Conecta à API REST do Google Gemini (`gemini-2.5-flash` com fallback automático para `gemini-1.5-flash`).
+  - Envia bytes em Base64 de PDFs ou imagens com `response_mime_type: "application/json"`.
+  - Extrai estritamente: `numero_protocolo`, `empreendimento`, `orgao`, `tipo_licenca`, `status_sugerido`, `resumo_andamento`, `pendencias_identificadas` e `historico_evento`.
+- **Pipeline de Persistência (`lib/features/ocr/data/ocr_pipeline_service.dart`):**
+  - Faz upload do arquivo original para o bucket `processos-documentos` no **Supabase Storage**.
+  - Insere o registro na tabela `processos`.
+  - Registra os metadados do documento em `documentos`.
+  - Insere automaticamente as pendências identificadas em `pendencias`.
+  - Cria o evento na tabela `historico_movimentacoes`.
+- **Interface de Upload e Validação (`lib/features/ocr/presentation/screens/novo_processo_ocr_screen.dart`):**
+  - Permite seleção de PDF (`FilePicker.pickFile`) ou foto/galeria (`ImagePicker`).
+  - Animação de análise com feedback em tempo real.
+  - Banner verde de confirmação e formulário totalmente editável para revisão do usuário antes de salvar.
+  - Card destacado com lista de pendências identificadas pela IA.
+
+---
+
+## 7. Próximos Passos de Desenvolvimento
+
+1. **Item 6 do Passo a Passo — Telas 04 e 05 (Detalhes e Pendências)**:
+   - Linha do tempo de movimentações (Timeline).
+   - Tela de gestão de pendências com envio de documentos comprobatórios para resposta.

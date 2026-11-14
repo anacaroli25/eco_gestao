@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../ocr/presentation/screens/novo_processo_ocr_screen.dart';
 import '../../data/processos_repository.dart';
 import '../../models/processo_model.dart';
 import '../widgets/processo_card.dart';
@@ -83,215 +84,16 @@ class _ProcessosListScreenState extends State<ProcessosListScreen> {
         });
   }
 
-  void _abrirModalNovoProcesso() {
-    final formKey = GlobalKey<FormState>();
-    final empController = TextEditingController();
-    final protoController = TextEditingController();
-    String tipoLicenca = 'Licença de Operação (LO)';
-    String status = 'em_analise';
-    String orgaoId = _orgaos.isNotEmpty ? _orgaos.first.id : '1';
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+  Future<void> _abrirTelaNovoProcesso() async {
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => const NovoProcessoOcrScreen(),
       ),
-      builder: (modalContext) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              ),
-              child: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Novo Processo Ambiental',
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () => Navigator.pop(modalContext),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Empreendimento / Propriedade',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: empController,
-                        decoration: const InputDecoration(
-                          hintText: 'Ex: Fazenda Boa Vista',
-                        ),
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'Obrigatório' : null,
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        'Número do Protocolo',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: protoController,
-                        decoration: const InputDecoration(
-                          hintText: 'Ex: 2026/001258',
-                        ),
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'Obrigatório' : null,
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        'Órgão Ambiental',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      DropdownButtonFormField<String>(
-                        value: orgaoId,
-                        decoration: const InputDecoration(),
-                        items: _orgaos.map((org) {
-                          return DropdownMenuItem(
-                            value: org.id,
-                            child: Text('${org.sigla} - ${org.nome}'),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setModalState(() => orgaoId = val);
-                        },
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        'Tipo de Licença',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      DropdownButtonFormField<String>(
-                        value: tipoLicenca,
-                        decoration: const InputDecoration(),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'Licença Prévia (LP)',
-                            child: Text('Licença Prévia (LP)'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Licença de Instalação (LI)',
-                            child: Text('Licença de Instalação (LI)'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Licença de Operação (LO)',
-                            child: Text('Licença de Operação (LO)'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Outorga de Água',
-                            child: Text('Outorga de Água'),
-                          ),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) setModalState(() => tipoLicenca = val);
-                        },
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        'Status Inicial',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      DropdownButtonFormField<String>(
-                        value: status,
-                        decoration: const InputDecoration(),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'em_analise',
-                            child: Text('Em análise'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'em_andamento',
-                            child: Text('Em andamento'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'com_pendencia',
-                            child: Text('Com pendência'),
-                          ),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) setModalState(() => status = val);
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: () async {
-                          if (!formKey.currentState!.validate()) return;
-                          final scaffoldMessenger = ScaffoldMessenger.of(context);
-                          Navigator.pop(modalContext);
-
-                          try {
-                            await widget.repository.cadastrarProcesso(
-                              empreendimento: empController.text.trim(),
-                              numeroProtocolo: protoController.text.trim(),
-                              tipoLicenca: tipoLicenca,
-                              orgaoId: orgaoId,
-                              status: status,
-                            );
-                            _carregarDados();
-                            scaffoldMessenger.showSnackBar(
-                              const SnackBar(
-                                content: Text('Processo cadastrado com sucesso!'),
-                                backgroundColor: AppColors.statusLicencaEmitida,
-                              ),
-                            );
-                          } catch (e) {
-                            scaffoldMessenger.showSnackBar(
-                              SnackBar(
-                                content: Text('Erro ao salvar: $e'),
-                                backgroundColor: AppColors.statusComPendencia,
-                              ),
-                            );
-                          }
-                        },
-                        child: const Text('Salvar Processo'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
     );
+
+    if (created == true) {
+      _carregarDados();
+    }
   }
 
   void _abrirDetalhesProcesso(ProcessoModel p) {
@@ -413,7 +215,7 @@ class _ProcessosListScreenState extends State<ProcessosListScreen> {
 
               // 2. Botão de Adicionar Processo
               ElevatedButton.icon(
-                onPressed: _abrirModalNovoProcesso,
+                onPressed: _abrirTelaNovoProcesso,
                 icon: const Icon(Icons.add_rounded, size: 20),
                 label: const Text('Adicionar processo'),
                 style: ElevatedButton.styleFrom(
