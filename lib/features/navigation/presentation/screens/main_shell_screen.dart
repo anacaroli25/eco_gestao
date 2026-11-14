@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/eco_brand_logo.dart';
+import '../../../home/presentation/screens/home_screen.dart';
+import '../../../processos/presentation/screens/processos_list_screen.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 
 /// Estrutura principal autenticada com a barra de navegação inferior (4 abas).
@@ -22,26 +24,23 @@ class _MainShellScreenState extends State<MainShellScreen> {
   @override
   Widget build(BuildContext context) {
     final screens = <Widget>[
-      _TabPlaceholder(
-        icon: Icons.home_rounded,
-        title: 'Início',
-        subtitle:
-            'Aqui ficará o resumo dos seus processos ambientais, status e notificações recentes (Tela 02).',
-        actionLabel: 'Ir para Processos',
-        onAction: () => _selectTab(1),
+      // Aba 0: Tela 02 — Home / Início
+      HomeScreen(
+        onNavigateToProcessos: () => _selectTab(1),
       ),
-      const _TabPlaceholder(
-        icon: Icons.folder_rounded,
-        title: 'Processos',
-        subtitle:
-            'Aqui ficará a listagem completa com busca, filtros por órgão e upload com OCR Gemini (Tela 03).',
-      ),
+
+      // Aba 1: Tela 03 — Processos
+      const ProcessosListScreen(),
+
+      // Aba 2: Notificações
       const _TabPlaceholder(
         icon: Icons.notifications_rounded,
         title: 'Notificações',
         subtitle:
             'Aqui ficarão os alertas sobre movimentações, pendências e licenças emitidas.',
       ),
+
+      // Aba 3: Perfil
       const ProfileScreen(),
     ];
 
@@ -113,15 +112,11 @@ class _TabPlaceholder extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
-  final String? actionLabel;
-  final VoidCallback? onAction;
 
   const _TabPlaceholder({
     required this.icon,
     required this.title,
     required this.subtitle,
-    this.actionLabel,
-    this.onAction,
   });
 
   @override
@@ -169,13 +164,6 @@ class _TabPlaceholder extends StatelessWidget {
                     height: 1.45,
                   ),
                 ),
-                if (actionLabel != null && onAction != null) ...[
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: onAction,
-                    child: Text(actionLabel!),
-                  ),
-                ],
               ],
             ),
           ),
