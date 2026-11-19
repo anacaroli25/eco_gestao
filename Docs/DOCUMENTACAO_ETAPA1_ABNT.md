@@ -150,7 +150,10 @@ EcoGestão/
 ├── Docs/
 │   ├── ARQUITETURA.md                # Especificação técnica e modelo de OCR
 │   ├── CONEXAO_SUPABASE.md           # Documentação e validação da conexão Supabase
-│   └── DOCUMENTACAO_ETAPA1_ABNT.md   # Documentação formal da Etapa 1
+│   ├── DOCUMENTACAO_ETAPA1_ABNT.md   # Documentação formal da Etapa 1
+│   ├── ETAPA_1_EcoGestao_ABNT.docx   # Documento ABNT formatado (Word)
+│   ├── OCR_GEMINI.md                 # Documentação do pipeline OCR com Gemini
+│   └── TELAS.md                      # Documentação das telas implementadas
 ├── lib/
 │   ├── core/
 │   │   ├── constants/
@@ -167,6 +170,28 @@ EcoGestão/
 │   │   │   │   └── auth_service.dart # Login, cadastro, reset e perfil
 │   │   │   └── presentation/screens/
 │   │   │       └── login_screen.dart # Tela 01 — Acesso e cadastro
+│   │   ├── home/
+│   │   │   └── presentation/screens/
+│   │   │       └── home_screen.dart  # Tela 02 — Painel inicial e resumo
+│   │   ├── processos/
+│   │   │   ├── data/
+│   │   │   │   └── processos_repository.dart
+│   │   │   ├── models/
+│   │   │   │   └── processo_model.dart
+│   │   │   └── presentation/
+│   │   │       ├── screens/
+│   │   │       │   └── processos_list_screen.dart # Tela 03 — Listagem/filtros
+│   │   │       └── widgets/
+│   │   │           └── processo_card.dart
+│   │   ├── ocr/
+│   │   │   ├── data/
+│   │   │   │   └── ocr_pipeline_service.dart
+│   │   │   ├── models/
+│   │   │   │   └── gemini_extracted_data.dart
+│   │   │   ├── services/
+│   │   │   │   └── gemini_ocr_service.dart
+│   │   │   └── presentation/screens/
+│   │   │       └── novo_processo_ocr_screen.dart
 │   │   ├── navigation/
 │   │   │   └── presentation/screens/
 │   │   │       └── main_shell_screen.dart # Menu inferior (4 abas)
@@ -222,7 +247,9 @@ Até o encerramento da Etapa 1, encontram-se implementados e integrados ao repos
 * **Serviço de Autenticação (`lib/features/auth/data/auth_service.dart`):** métodos para login (`signIn`), criação de conta (`signUp`), redefinição de senha (`sendPasswordReset`), encerramento de sessão (`signOut`), garantia automática de registro na tabela `profiles` (`ensureProfile`) e tradução de erros do Supabase Auth para o português (`mapErrorMessage`);
 * **Tela 01 — Cadastro e Login (`lib/features/auth/presentation/screens/login_screen.dart`):** interface estruturada com logotipo institucional, alternância entre modos *Entrar* e *Criar minha conta*, validação de campos obrigatórios e tamanho mínimo de senha, exibição/ocultação de senha e diálogo de recuperação de senha;
 * **Menu Inferior e Aba Perfil (`lib/features/navigation/presentation/screens/main_shell_screen.dart` e `profile_screen.dart`):** navegação persistente entre **Início**, **Processos**, **Notificações** e **Perfil**, com exibição dos dados do usuário logado e ação de logout com confirmação;
-* **Testes de Interface (`test/widget_test.dart`):** três testes de widget cobrindo alternância Login/Cadastro, validação de campos obrigatórios e navegação entre as quatro abas do menu inferior.
+* **Telas 02 e 03 — Home e Processos (`home_screen.dart`, `processos_list_screen.dart`, `processos_repository.dart`, `processo_model.dart`, `processo_card.dart`):** resumo inicial dos processos e listagem com filtros integrados ao Supabase;
+* **Módulo OCR com Gemini (`gemini_ocr_service.dart`, `ocr_pipeline_service.dart`, `gemini_extracted_data.dart`, `novo_processo_ocr_screen.dart`):** leitura multimodal de documentos para preenchimento e cadastro de processos;
+* **Testes de Interface (`test/widget_test.dart`):** testes de widget cobrindo alternância Login/Cadastro, validação de campos obrigatórios e navegação entre as quatro abas do menu inferior.
 
 ### 6.2 Evidências de Versionamento e Execução
 
@@ -234,6 +261,9 @@ O histórico de versionamento no GitHub comprova a evolução incremental do pro
 | `3d480f7` | *Inicio de projeto* | Inclusão de `ARQUITETURA.md`, `supabase_schema.sql` e especificações iniciais. |
 | `f6ea56c` | *Conexão inicial concluída* | Inicialização do projeto Flutter, tema visual, pacotes e conexão validada com Supabase. |
 | `17e7b2f` | *Criação tela screen, home* | Implementação da Tela 01 (Login/Cadastro), `AuthService`, `MainShellScreen` e `ProfileScreen`. |
+| `57ee62f` | *4. Telas 02 e 03 (Home e Processos)* | Implementação das telas Home, listagem de processos, repositório e cards. |
+| `2922df0` | *5. OCR com Gemini ("Adicionar Processo")* | Implementação do serviço OCR Gemini, pipeline e tela de novo processo. |
+| `f6b7596` | *Documentação OCR* | Inclusão da documentação técnica do módulo OCR (`Docs/OCR_GEMINI.md`). |
 
 *(Espaço reservado na versão final em Word/PDF para inserção das capturas de tela do aplicativo em execução, do painel de tabelas do Supabase e dos commits no GitHub.)*
 
