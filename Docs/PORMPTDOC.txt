@@ -1,0 +1,13 @@
+Nesta primeira etapa, a dupla deverá apresentar o planejamento técnico do sistema e demonstrar o início do desenvolvimento com evidências.
+Definição das tecnologias que serão utilizadas;
+Escolha da linguagem de programação e dos frameworks;
+Definição do banco de dados;
+Estruturação inicial do projeto;
+Criação da estrutura do banco de dados;
+Implementação inicial da aplicação.
+Nome do sistema e descrição de sua finalidade;
+Nome dos integrantes da dupla;
+Tecnologias escolhidas;
+Modelo ou estrutura inicial do banco de dados;
+Link do repositório do projeto (GitHub ou equivalente), caso utilizado;
+Prints ou evidências do desenvolvimento inicial.

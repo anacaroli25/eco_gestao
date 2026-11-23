@@ -1,0 +1,58 @@
+ ### Passo 2 — Inicializar o projeto Flutter no repositório                                                                                    
+                                                                                                                                                
+  Na pasta raiz do projeto (onde estão ARQUITETURA.md e supabase_schema.sql), rode:                                                             
+                                                                                                                                                
+    flutter create . --project-name eco_gestao                                                                                                  
+                                                                                                                                                
+  (O --project-name eco_gestao é obrigatório porque a pasta tem espaço/acento, e o Dart não aceita acentos no nome do pacote.)                  
+                                                                                                                                                
+  Em seguida, faça o primeiro teste rodando o app padrão do Flutter no navegador:                                                               
+                                                                                                                                                
+    flutter run -d chrome                                                                                                                       
+                                                                                                                                                
+  Se abrir uma janela do Chrome com o app contador do Flutter, o ambiente está 100% pronto para programar.                                      
+  ──────                                                                                                                                        
+  ### Passo 3 — Preparar o Supabase e a Chave do Gemini (Backend + IA)                                                                          
+                                                                                                                                                
+  Antes de ligar o app aos dados reais:                                                                                                         
+                                                                                                                                                
+  1. No Supabase (supabase.com):                                                                                                                
+      • Crie uma conta e um novo projeto (ex: eco-gestao).                                                                                      
+      • Vá em SQL Editor, cole todo o conteúdo do arquivo supabase_schema.sql e clique em Run (isso cria todas as 7 tabelas e os órgãos         
+      NATURATINS, IBAMA, SEDEMA, SEMAD).                                                                                                        
+      • Vá em Storage → New bucket e crie o bucket processos-documentos.                                                                        
+      • Vá em Project Settings → API e anote a Project URL e a chave anon public.                                                               
+  2. No Google AI Studio (aistudio.google.com):                                                                                                 
+      • Gere uma API Key do Gemini para o módulo de OCR.                                                                                        
+  3. Segurança (.env):                                                                                                                          
+      • Crie um arquivo .env na raiz do projeto com essas 3 chaves e adicione .env no arquivo .gitignore para nunca enviar suas chaves para o   
+      GitHub.                                                                                                                                   
+                                                                                                                                                
+  ──────                                                                                                                                        
+  ### Passo 4 — Instalar os pacotes no Flutter                                                                                                  
+                                                                                                                                                
+  Com o projeto criado, adicione as dependências principais:                                                                                    
+                                                                                                                                                
+    flutter pub add supabase_flutter google_fonts file_picker image_picker flutter_dotenv http                                                  
+                                                                                                                                                
+  (Usar http direto na API REST do Gemini garante suporte total a PDFs, imagens e JSON Schema estruturado sem depender de pacotes               
+  descontinuados.)                                                                                                                              
+  ──────                                                                                                                                        
+  ### Passo 5 — Ordem de criação do código (seguindo o ARQUITETURA.md)                                                                          
+                                                                                                                                                
+  Para não se perderem e conseguirem testar cada tela aos poucos:                                                                               
+                                                                                                                                                
+  1. Identidade Visual (lib/core/): criar as cores (#176B3A, #57A66C, #E8F3EA, #F5F7F5), as fontes (Poppins e Inter) e o tema global.           
+  2. Conexão Inicial (lib/main.dart): carregar o .env e inicializar o Supabase.initialize(...).                                                 
+  3. Tela 01 (Login/Cadastro) + Menu Inferior: login com Supabase Auth e barra inferior (Início, Processos, Notificações, Perfil).              
+  4. Telas 02 e 03 (Home e Processos): contadores de status, lista vinda do banco, barra de busca e filtros por órgão/status.                   
+  5. OCR com Gemini ("Adicionar Processo"): subir PDF/foto → enviar para a API do Gemini extrair protocolo, empreendimento, órgão, licença e    
+  pendências → mostrar na tela para o usuário confirmar → salvar no Supabase + Storage.                                                         
+  6. Telas 04 e 05 (Detalhes e Pendências): linha do tempo do processo e upload de documentos para responder às pendências.                     
+  ──────                                                                                                                                        
+  ### Como você quer seguir agora?                                                                                                              
+                                                                                                                                                
+  1. Vai rodar o flutter create . --project-name eco_gestao e testar no Chrome primeiro?                                                        
+  2. Quando quiser, posso te ajudar passo a passo na criação do projeto no Supabase ou já irmos construindo os arquivos iniciais no código      
+  (começando pelo tema visual e pela Tela 01 — Login).     
+
