@@ -4,17 +4,22 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../auth/data/auth_service.dart';
 import '../../../processos/data/processos_repository.dart';
 import '../../../processos/models/processo_model.dart';
+import '../../../processos/presentation/screens/processo_detalhes_screen.dart';
 import '../../../processos/presentation/widgets/processo_card.dart';
 
 /// Tela 02 — Home / Início: Resumo geral, contadores de status e processos recentes.
 class HomeScreen extends StatefulWidget {
+  final int refreshTick;
   final VoidCallback? onNavigateToProcessos;
+  final VoidCallback? onDataChanged;
   final ProcessosRepository repository;
   final AuthService authService;
 
   const HomeScreen({
     super.key,
+    this.refreshTick = 0,
     this.onNavigateToProcessos,
+    this.onDataChanged,
     this.repository = const ProcessosRepository(),
     this.authService = const AuthService(),
   });
@@ -32,6 +37,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _carregarDados();
+  }
+
+  @override
+  void didUpdateWidget(covariant HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.refreshTick != oldWidget.refreshTick) {
+      _carregarDados();
+    }
   }
 
   Future<void> _carregarDados() async {
@@ -52,88 +65,31 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _mostrarDetalhesRapidos(ProcessoModel processo) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  Future<void> _abrirDetalhesProcesso(ProcessoModel processo) async {
+    final result = await Navigator.of(context).push<dynamic>(
+      MaterialPageRoute(
+        builder: (_) => ProcessoDetalhesScreen(processo: processo),
       ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      processo.empreendimento,
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Protocolo: ${processo.numeroProtocolo}',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Órgão: ${processo.orgaoSigla ?? "Não informado"} • ${processo.tipoLicenca}',
-                style: GoogleFonts.inter(fontSize: 13, color: AppColors.textMuted),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: processo.statusBackgroundColor,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  processo.statusLabel,
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600,
-                    color: processo.statusColor,
-                  ),
-                ),
-              ),
-              if (processo.observacoes != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  processo.observacoes!,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  widget.onNavigateToProcessos?.call();
-                },
-                child: const Text('Ver na Lista de Processos'),
-              ),
-            ],
-          ),
-        );
-      },
     );
+
+    if (!mounted) return;
+    if (result == true || result == 'go_home') {
+      await _carregarDados();
+      widget.onDataChanged?.call();
+    }
+  }
+
+  Future<void> _abrirNotificacaoPendencia() async {
+    final pendentes = await widget.repository.getProcessos(
+      status: 'com_pendencia',
+    );
+    if (!mounted) return;
+
+    if (pendentes.isNotEmpty) {
+      await _abrirDetalhesProcesso(pendentes.first);
+    } else {
+      widget.onNavigateToProcessos?.call();
+    }
   }
 
   @override
@@ -249,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ..._recentes.map(
                 (p) => ProcessoCard(
                   processo: p,
-                  onTap: () => _mostrarDetalhesRapidos(p),
+                  onTap: () => _abrirDetalhesProcesso(p),
                 ),
               ),
 
@@ -288,62 +244,72 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 12),
 
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight.withOpacity(0.5),
+            Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.primaryMedium.withOpacity(0.3)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.notifications_active_outlined,
-                      color: AppColors.primaryDark,
-                      size: 20,
+                onTap: _abrirNotificacaoPendencia,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.primaryMedium.withOpacity(0.3),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Documentos solicitados',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryLight,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Há documentos pendentes no Loteamento Verde.',
-                          style: GoogleFonts.inter(
-                            fontSize: 12.5,
-                            color: AppColors.textSecondary,
-                          ),
+                        child: const Icon(
+                          Icons.notifications_active_outlined,
+                          color: AppColors.primaryDark,
+                          size: 20,
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Hoje, às 09:30',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: AppColors.textMuted,
-                          ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Documentos solicitados',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Há documentos pendentes no Loteamento Verde.',
+                              style: GoogleFonts.inter(
+                                fontSize: 12.5,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Hoje, às 09:30 • Toque para visualizar',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
             const SizedBox(height: 20),

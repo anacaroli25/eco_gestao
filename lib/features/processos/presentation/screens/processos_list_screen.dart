@@ -5,13 +5,20 @@ import '../../../ocr/presentation/screens/novo_processo_ocr_screen.dart';
 import '../../data/processos_repository.dart';
 import '../../models/processo_model.dart';
 import '../widgets/processo_card.dart';
+import 'processo_detalhes_screen.dart';
 
 /// Tela 03 — Processos: Listagem completa, busca textual, filtros por órgão e status, e inclusão.
 class ProcessosListScreen extends StatefulWidget {
+  final int refreshTick;
+  final VoidCallback? onNavigateToHome;
+  final VoidCallback? onDataChanged;
   final ProcessosRepository repository;
 
   const ProcessosListScreen({
     super.key,
+    this.refreshTick = 0,
+    this.onNavigateToHome,
+    this.onDataChanged,
     this.repository = const ProcessosRepository(),
   });
 
@@ -42,6 +49,14 @@ class _ProcessosListScreenState extends State<ProcessosListScreen> {
   void initState() {
     super.initState();
     _carregarDados();
+  }
+
+  @override
+  void didUpdateWidget(covariant ProcessosListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.refreshTick != oldWidget.refreshTick) {
+      _carregarDados();
+    }
   }
 
   @override
@@ -92,93 +107,30 @@ class _ProcessosListScreenState extends State<ProcessosListScreen> {
     );
 
     if (created == true) {
-      _carregarDados();
+      await _carregarDados();
+      widget.onDataChanged?.call();
     }
   }
 
-  void _abrirDetalhesProcesso(ProcessoModel p) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  Future<void> _abrirDetalhesProcesso(ProcessoModel p) async {
+    final result = await Navigator.of(context).push<dynamic>(
+      MaterialPageRoute(
+        builder: (_) => ProcessoDetalhesScreen(processo: p),
       ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                p.empreendimento,
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Protocolo: ${p.numeroProtocolo}',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: p.statusBackgroundColor,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      p.statusLabel,
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w600,
-                        color: p.statusColor,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    p.orgaoSigla ?? '',
-                    style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Licença: ${p.tipoLicenca}',
-                style: GoogleFonts.inter(fontSize: 13),
-              ),
-              if (p.observacoes != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  'Observações: ${p.observacoes}',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Fechar'),
-              ),
-            ],
-          ),
-        );
-      },
     );
+
+    if (!mounted) return;
+
+    if (result == 'go_home') {
+      await _carregarDados();
+      widget.onNavigateToHome?.call();
+      return;
+    }
+
+    if (result == true) {
+      await _carregarDados();
+      widget.onDataChanged?.call();
+    }
   }
 
   @override

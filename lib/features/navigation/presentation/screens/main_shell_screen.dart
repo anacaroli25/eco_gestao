@@ -16,9 +16,21 @@ class MainShellScreen extends StatefulWidget {
 
 class _MainShellScreenState extends State<MainShellScreen> {
   int _currentIndex = 0;
+  int _refreshTick = 0;
 
   void _selectTab(int index) {
     setState(() => _currentIndex = index);
+  }
+
+  void _triggerRefresh() {
+    setState(() => _refreshTick++);
+  }
+
+  void _goHomeAndRefresh() {
+    setState(() {
+      _currentIndex = 0;
+      _refreshTick++;
+    });
   }
 
   @override
@@ -26,11 +38,17 @@ class _MainShellScreenState extends State<MainShellScreen> {
     final screens = <Widget>[
       // Aba 0: Tela 02 — Home / Início
       HomeScreen(
+        refreshTick: _refreshTick,
         onNavigateToProcessos: () => _selectTab(1),
+        onDataChanged: _triggerRefresh,
       ),
 
       // Aba 1: Tela 03 — Processos
-      const ProcessosListScreen(),
+      ProcessosListScreen(
+        refreshTick: _refreshTick,
+        onNavigateToHome: _goHomeAndRefresh,
+        onDataChanged: _triggerRefresh,
+      ),
 
       // Aba 2: Notificações
       const _TabPlaceholder(

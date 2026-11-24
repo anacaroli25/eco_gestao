@@ -20,6 +20,9 @@ class ProcessoContadores {
 
 /// Repositório de acesso a dados dos processos no Supabase com suporte a fallback.
 class ProcessosRepository {
+  /// Mantém sobrescritas em memória para processos de demonstração após ações do usuário.
+  static final Map<String, String> demoStatusOverrides = {};
+
   const ProcessosRepository();
 
   /// Busca todos os órgãos ambientais cadastrados.
@@ -74,9 +77,8 @@ class ProcessosRepository {
     String? status,
     String? orgaoId,
   }) async {
-    final userId = supabaseClient.auth.currentUser?.id;
-
     try {
+      final userId = supabaseClient.auth.currentUser?.id;
       var query = supabaseClient.from('processos').select(
         '*, orgaos_ambientais(sigla, nome)',
       );
@@ -219,7 +221,7 @@ class ProcessosRepository {
   /// Dados iniciais de demonstração baseados exatamente nas telas do documento de IHC.
   List<ProcessoModel> _getDemonstracaoProcessos() {
     final now = DateTime.now();
-    return [
+    final baseList = [
       ProcessoModel(
         id: 'proc-1',
         userId: 'demo-user',
@@ -277,5 +279,27 @@ class ProcessosRepository {
         observacoes: 'Licença deferida e emitida em conformidade.',
       ),
     ];
+
+    if (demoStatusOverrides.isEmpty) return baseList;
+
+    return baseList.map((p) {
+      final override = demoStatusOverrides[p.id];
+      if (override == null || override == p.status) return p;
+      return ProcessoModel(
+        id: p.id,
+        userId: p.userId,
+        orgaoId: p.orgaoId,
+        orgaoSigla: p.orgaoSigla,
+        orgaoNome: p.orgaoNome,
+        empreendimento: p.empreendimento,
+        numeroProtocolo: p.numeroProtocolo,
+        tipoLicenca: p.tipoLicenca,
+        status: override,
+        dataProtocolo: p.dataProtocolo,
+        dataVencimento: p.dataVencimento,
+        observacoes: p.observacoes,
+        createdAt: p.createdAt,
+      );
+    }).toList();
   }
 }

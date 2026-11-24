@@ -133,3 +133,30 @@ on public.documentos for all using (
         and (user_id = auth.uid() or exists (select 1 from public.profiles where id = auth.uid() and role in ('consultor', 'admin')))
     )
 );
+
+create policy "Usuarios atualizam seus proprios processos"
+on public.processos for update using (
+    auth.uid() = user_id or 
+    exists (select 1 from public.profiles where id = auth.uid() and role in ('consultor', 'admin'))
+);
+
+create policy "Usuarios gerenciam pendencias dos seus processos"
+on public.pendencias for all using (
+    exists (
+        select 1 from public.processos 
+        where id = pendencias.processo_id 
+        and (user_id = auth.uid() or exists (select 1 from public.profiles where id = auth.uid() and role in ('consultor', 'admin')))
+    )
+);
+
+create policy "Usuarios gerenciam historico dos seus processos"
+on public.historico_movimentacoes for all using (
+    exists (
+        select 1 from public.processos 
+        where id = historico_movimentacoes.processo_id 
+        and (user_id = auth.uid() or exists (select 1 from public.profiles where id = auth.uid() and role in ('consultor', 'admin')))
+    )
+);
+
+create policy "Usuarios gerenciam suas proprias notificacoes"
+on public.notificacoes for all using (auth.uid() = user_id);
